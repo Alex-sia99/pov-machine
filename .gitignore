@@ -1,0 +1,7 @@
+node_modules/
+*.bak-pov
+.DS_Store
+Thumbs.db
+.env
+data/
+output/

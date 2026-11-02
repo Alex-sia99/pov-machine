@@ -1,0 +1,70 @@
+{
+  "id": "pov",
+  "name": "POV",
+  "description": "Documentaires dramatisés à la 2ᵉ personne « Your Life as Every Rank in … » (niche POVrank) — outline + niveaux Claude → Inworld TTS par niveau + Whisper → images 2D i2i ancrées sur un protagoniste qui vieillit → pyramide de rangs Remotion à chaque niveau → FFmpeg (sous-titres · CTA présentateur).",
+  "files": [
+    "agent-os/lib/machines/pov.js",
+    "agent-os/public/js/pages/pov.js",
+    "agent-os/lib/machines/pov.export.json",
+    "agent-os/docs/RECETTE-NICHE-POV.md",
+    "remotion/src/PovPyramid.tsx",
+    "remotion/src/StickmanCta.tsx"
+  ],
+  "requires": [
+    "Un clone d'Agent OS avec le socle en place (modules NON inclus dans l'export) : `lib/store.js`, `lib/claude.js` (Claude CLI connecté), `lib/vault.js`, `lib/google.js` (Drive + YouTube), `lib/tasks.js`, `lib/spend.js`, `lib/bank.js`, `lib/scrap.js`, `lib/fal.js`, `lib/ffmpeg.js`.",
+    "FFmpeg installé et dans le PATH (clips zoompan, concat, sous-titres, mux). Police « Comic Sans MS » (Windows) pour les sous-titres — remplacer `FontName=` sinon.",
+    "Le projet Remotion voisin (`remotion/`) opérationnel : compo `PovPyramid` (pyramide de rangs, MP4 direct) et `StickmanCta` (bouton s'abonner en séquence PNG).",
+    "Coffre : clé `kie` (images Nano Banana / Seedream / GPT Image) et clé `fal` (Inworld TTS + Whisper).",
+    "Google Drive connecté (upload PUBLIC de la référence du protagoniste — lue par Kie en i2i — et de l'audio pour Whisper) ; une chaîne YouTube si publication.",
+    "Banque de niches : une niche « POV » scrappée (chaîne POVrank) — idées, packaging et miniature s'en nourrissent (miniatures concurrentes = références de style). Sans elle la machine tourne, en mode générique."
+  ],
+  "tools": [
+    "**Claude CLI** — outline (titre, protagoniste, 10 rangs avec âge/tenue/beat unique/personnages secondaires/mot d'évaluation, fin), niveaux écrits EN PARALLÈLE (5 à la fois), prompts d'images par lots de 12, packaging, prompt miniature.",
+    "**FAL.ai — `fal-ai/inworld-tts`** : voix off PAR NIVEAU (+ le bloc CTA), morceaux ≤ 1 900 caractères. **`fal-ai/whisper`** (mot à mot) sur la voix assemblée → découpage des plans sur le sens + sous-titres.",
+    "**Kie.ai — i2i du catalogue (`nano-banana-2-lite` par défaut)** : référence du protagoniste (t2i), cartes chibi de la pyramide (i2i), toutes les images de scène (i2i ancrées sur la référence + tenue/âge du niveau), miniature (i2i sur les miniatures concurrentes).",
+    "**Remotion — `PovPyramid`** : pyramide 4/3/2/1 + zoom sur le niveau courant, rendue en MP4 (3 s) pour chaque niveau ; **`StickmanCta`** : bouton s'abonner (PNG alpha) incrusté pendant le CTA.",
+    "**FFmpeg** : clips zoompan 1920×1080, concat ré-encodé, sous-titres gravés (police arrondie blanche contour noir), overlay CTA, mux voix.",
+    "**Google Drive** (références publiques) · **YouTube** (publication résumable, privée par défaut) · **Telegram** (tâches + Sauvetage)."
+  ],
+  "pipeline": [
+    "**1. Script** : outline en 1 appel (anti-répétition : un beat unique par niveau, âges croissants, rappels entre niveaux) → niveaux étoffés en parallèle (~375 mots chacun à 150 mots/min), persistés au fil de l'eau (reprenable). En semi, chaque niveau est éditable avant la voix.",
+    "**2. Voix** : TTS par niveau + CTA fixe de la niche inséré après le niveau 3 → concat → offsets réels → Whisper → plans de ~5,5 s calés sur le sens ; les 3 premières secondes de chaque niveau sont réservées à la pyramide.",
+    "**3. Prompts** : descriptions EN par lots (contexte du niveau : rang, âge, tenue, personnages secondaires), répartition plan moyen / large / objet / visage.",
+    "**4. Images** : référence du protagoniste → cartes de la pyramide (niveaux 1..N-1, le sommet reste une silhouette) → images de scène i2i (pool 5, 3 essais, 2e vague).",
+    "**5. Montage** : clips + pyramides Remotion + clip présentateur (asset machine) → concat → sous-titres → bouton CTA → voix → `final.mp4`.",
+    "**6. Packaging** : titre formule « Your Life as Every Rank in … », description code chaîne + disclaimer IA, tags, miniature Odd Dude (rang 1 à gauche / rang 10 à droite, zéro texte).",
+    "Machine à états reprenable (`advance`/`deriveStatus`/`validate`/`resumeRun`/`sweepRuns`/`strandedRuns`), régé non destructive (plans, cartes, référence), `orderRun`/`suggestThemes` pour le restock et le calendrier."
+  ],
+  "creation": [
+    "Machine n°7 de cet Agent OS (août 2026), clonée depuis `lib/machines/stickman.js` (squelette voix-off + images + montage) selon le skill `machine-factory`.",
+    "Recette dérivée à 100 % de la data : 24 vidéos POVrank scrappées (transcripts + vision), sous-titres horodatés des 24 (structure : 10 niveaux de ~2 min 20, CTA après le niveau 3, ~150 mots/min), décorticage image par image de 2 vidéos (pyramide 4/3/2/1, silhouette Level 10, style 2D webtoon, 1 image / ~6 s) et des 24 miniatures (style Odd Dude, rang 1 vs rang 10). Voir `docs/RECETTE-NICHE-POV.md`.",
+    "Coutures nées ici : niveaux écrits en parallèle sous outline, voix par segment avec offsets réels, plans typés `pyramid` / `cta` / `scene` dans la même timeline, cartes de pyramide dérivées de la référence, miniature ancrée sur les miniatures concurrentes."
+  ],
+  "serverSnippet": {
+    "file": "agent-os/server.js",
+    "start": "// ===== MACHINE POV =====",
+    "end": "// ===== FIN MACHINE POV ====="
+  },
+  "install": [
+    "Copier les fichiers de `files/` aux mêmes chemins relatifs dans le projet cible.",
+    "server.js — en tête (~ligne 40) : `const pov = require(\"./lib/machines/pov\");` et ajouter `pov` à la map `MACHINES`.",
+    "server.js — manifest agent (`/api/agent/manifest`) : ajouter `{ id: \"pov\", name: \"POV\", api: \"/api/machines/pov\" }`.",
+    "server.js — route `GET /api/machines` : ajouter `card(pov)` à la liste.",
+    "server.js — regex du stock générique (`/stock`, `/stock/:id/publish`, `/stock/:id`) et des routes `order-info` / `ideas` : ajouter `|pov` dans le groupe.",
+    "server.js — coller le bloc `server-routes.snippet.js` AVANT le bloc `// ===== MACHINE Musique =====`.",
+    "server.js — boot : ajouter `pov.sweepRuns()` à la ligne des sweeps, et `...pov.strandedRuns()` dans la boucle du cron Sauvetage.",
+    "public/index.html : `<script src=\"js/pages/pov.js\"></script>` après stickman.js.",
+    "public/js/core.js : ajouter `\"pov\"` au tableau navName qui garde le highlight nav sur « machines ».",
+    "public/js/pages/machines.js : ajouter la carte hub `#/pov` + `\"#/pov\": \"pov-tab\"` dans TAB_KEYS + les 3 appels API dans le Promise.all.",
+    "remotion/src/Root.tsx : `import { PovPyramid, povPyramidSchema, FPS as POV_FPS } from \"./PovPyramid\";` + une `<Composition id=\"PovPyramid\" component={PovPyramid} durationInFrames={POV_FPS * 3} fps={POV_FPS} width={1920} height={1080} schema={povPyramidSchema} defaultProps={{ dir: \"pov-demo\", cards: [\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"], level: 3, label: \"Level 3\", seconds: 3 }} calculateMetadata={({ props }) => ({ durationInFrames: Math.max(1, Math.round(props.seconds * POV_FPS)) })} />`. Si `StickmanCta` n'existe pas déjà, l'enregistrer aussi (voir la machine Stickman). Vérifier `npx remotion compositions`.",
+    "Banque de niches : créer/relier une niche « POV » avec la chaîne POVrank scrappée (la machine la retrouve par son nom, sinon la choisir dans 🛠 Paramètres).",
+    "Coffre : clés `kie` et `fal`. Google Drive connecté."
+  ],
+  "runtimeData": [
+    "data/machines/pov.json (config + présentateur)",
+    "data/machines/pov-stock.json (stock vidéos)",
+    "data/machines/runs/pov/ (runs)",
+    "output/machines/<runId>/ (médias : ref.png, cards/, img/, vo-L*.mp3, final.mp4, thumbnail.png) et output/machines/pov-assets/host.png"
+  ],
+  "distribution": "Dépôt public https://github.com/Alex-sia99/pov-machine (install.js idempotent). La publication passe par YouTube en direct depuis Agent OS ; aucune remise à un serveur distant dans cette version."
+}
